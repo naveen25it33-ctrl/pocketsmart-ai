@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PocketSmart AI</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+.container{max-width:850px;margin:35px auto;padding:20px}
+.card{background:white;border-radius:18px;padding:28px;box-shadow:0 8px 25px #00000012}
+h1{margin:0 0 5px;font-size:30px}.subtitle{color:#687386;margin-bottom:25px}
+label{display:block;font-weight:bold;margin:16px 0 7px}
+input{width:100%;padding:12px;border:1px solid #d8dde7;border-radius:9px;font-size:16px}
+.expense{display:grid;grid-template-columns:1fr 150px 42px;gap:10px;margin-bottom:10px}
+button{border:0;border-radius:9px;padding:11px 15px;cursor:pointer;font-weight:bold}
+.add{background:#eef2ff}.remove{background:#ffecec;color:#c33}.ai{width:100%;background:#5b4bdb;color:white;margin-top:20px;font-size:16px}
+.snapshot{margin-top:25px;padding:20px;background:#f7f8fc;border-radius:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:white;padding:15px;border-radius:10px}
+.stat small{color:#6c7482}.stat strong{display:block;font-size:21px;margin-top:6px}
+.result{margin-top:20px;padding:18px;background:#f0fdf4;border-radius:12px;line-height:1.6;display:none}
+footer{text-align:center;color:#8a92a1;font-size:13px;margin-top:20px}
+@media(max-width:600px){.container{margin:10px auto;padding:10px}.stats{grid-template-columns:1fr}.expense{grid-template-columns:1fr 110px 42px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+<h1>💰 PocketSmart AI</h1>
+<div class="subtitle">Your Smart Budget & Recommendation Assistant<br>Gemini Powered</div>
+
+<label>Monthly income</label>
+<input id="income" type="number" value="100000" placeholder="Income (₹)">
+
+<label>Add expense</label>
+<div id="expenses"></div>
+<button class="add" onclick="addExpense()">＋ Add expense</button>
+
+<div class="snapshot">
+<h2>Budget snapshot</h2>
+<div class="stats">
+<div class="stat"><small>Income</small><strong id="showIncome">₹0</strong></div>
+<div class="stat"><small>Expenses</small><strong id="showExpenses">₹0</strong></div>
+<div class="stat"><small>Balance</small><strong id="showBalance">₹0</strong></div>
+</div>
+</div>
+
+<button class="ai" onclick="recommend()">✨ Generate AI Recommendations</button>
+<div id="result" class="result"></div>
+</div>
+<footer>PocketSmart AI • Demo project • Keep your Gemini API key private</footer>
+</div>
+
+<script>
+const defaultExpenses=[
+["Housing",50000],["Transport",7000],["Shopping",5000],["Food",5000],["Entertainment",20000]
+];
+function addExpense(name="",amount=""){
+ const row=document.createElement("div"); row.className="expense";
+ row.innerHTML=`<input class="ename" placeholder="e.g. Groceries" value="${name}">
+ <input class="eamount" type="number" placeholder="Amount" value="${amount}">
+ <button class="remove" onclick="this.parentElement.remove();calculate()">×</button>`;
+ document.getElementById("expenses").appendChild(row);
+ calculate();
+}
+function money(n){return "₹"+Number(n).toLocaleString("en-IN")}
+function calculate(){
+ const income=Number(document.getElementById("income").value)||0;
+ let total=0;
+ document.querySelectorAll(".eamount").forEach(x=>total+=Number(x.value)||0);
+ document.getElementById("showIncome").textContent=money(income);
+ document.getElementById("showExpenses").textContent=money(total);
+ document.getElementById("showBalance").textContent=money(income-total);
+}
+function recommend(){
+ const income=Number(document.getElementById("income").value)||0;
+ let items=[...document.querySelectorAll(".expense")].map(r=>({
+ name:r.querySelector(".ename").value||"Other",
+ amount:Number(r.querySelector(".eamount").value)||0
+ }));
+ const total=items.reduce((s,x)=>s+x.amount,0), balance=income-total;
+ items.sort((a,b)=>b.amount-a.amount);
+ const largest=items.slice(0,3).map(x=>`${x.name} (${money(x.amount)})`).join(", ");
+ let msg=`Monthly income: ${money(income)}<br>Total expenses: ${money(total)}<br>Remaining balance: ${money(balance)}<br><br>`;
+ msg+=`Largest spending categories: ${largest || "None"}<br><br>`;
+ msg+= balance>0 ? "You have positive cash flow. Consider assigning part of the balance to savings." :
+      balance===0 ? "Your income is fully used by expenses. Review your spending categories." :
+      "Your expenses are higher than your income. Consider reducing non-essential spending.";
+ const r=document.getElementById("result"); r.innerHTML=msg; r.style.display="block";
+}
+document.getElementById("income").addEventListener("input",calculate);
+defaultExpenses.forEach(x=>addExpense(x[0],x[1]));
+calculate();
+</script>
+</body>
+</html>
